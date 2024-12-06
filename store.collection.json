@@ -1,0 +1,3187 @@
+{
+	"info": {
+		"_postman_id": "2b6201be-77b8-478e-9c98-88c2ad5329b3",
+		"name": "store",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "34580679"
+	},
+	"item": [
+		{
+			"name": "Products",
+			"item": [
+				{
+					"name": "Positive testing",
+					"item": [
+						{
+							"name": "Create product",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"const Ajv = require('ajv');\r",
+											"const ajv = new Ajv({ allErrors: true });\r",
+											"\r",
+											"const schemaProduct = {\r",
+											"  \"type\": \"object\",\r",
+											"  \"properties\": {\r",
+											"    \"id\": {\r",
+											"      \"type\": \"integer\"\r",
+											"    },\r",
+											"    \"name\": {\r",
+											"      \"type\": \"string\"\r",
+											"    },\r",
+											"    \"price\": {\r",
+											"      \"type\": \"integer\"\r",
+											"    },\r",
+											"    \"sku\": {\r",
+											"      \"type\": \"integer\"\r",
+											"    },\r",
+											"    \"description\": {\r",
+											"      \"type\": \"string\"\r",
+											"    }\r",
+											"  },\r",
+											"  \"required\": [\r",
+											"    \"id\",\r",
+											"    \"name\",\r",
+											"    \"price\",\r",
+											"    \"sku\",\r",
+											"    \"description\"\r",
+											"  ]\r",
+											"}\r",
+											"\r",
+											"const validate = ajv.compile(schemaProduct);\r",
+											"\r",
+											"const responseData = pm.response.json();\r",
+											"\r",
+											"const valid = validate(responseData);\r",
+											"\r",
+											"pm.test(\"Response time is less than 200ms\", function () {\r",
+											"    pm.expect(pm.response.responseTime).to.be.below(200);\r",
+											"});\r",
+											"pm.test(\"Status code is 201\", function () {\r",
+											"    pm.expect(pm.response).to.have.status(201);\r",
+											"});\r",
+											"pm.test(\"Content-Type is present\", function () {\r",
+											"    pm.expect(pm.response).to.have.header(\"Content-Type\");\r",
+											"});\r",
+											"pm.test(\"Schema is valid\", function (){\r",
+											"    if(!valid){\r",
+											"        console.log('Schema validation errors:', validate.errors);\r",
+											"    }\r",
+											"    pm.expect(valid, \"Schema errors: \" + JSON.stringify(validate.errors, null, 2)).to.be.true;\r",
+											"});\r",
+											"\r",
+											"pm.collectionVariables.set(\"product_id\", responseData.id);\r",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"name\": \"orange\",\r\n    \"price\": 8,\r\n    \"sku\": 123321123,\r\n    \"description\": \"wouh\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/products",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"products"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "List products pagination",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"const Ajv = require('ajv');\r",
+											"const ajv = new Ajv({ allErrors: true });\r",
+											"\r",
+											"const schemaProducts = {\r",
+											"    \"type\": \"array\",\r",
+											"    \"items\": {\r",
+											"        \"type\": \"object\",\r",
+											"        \"properties\": {\r",
+											"            \"id\": { \"type\": \"integer\" },\r",
+											"            \"name\": { \"type\": \"string\" },\r",
+											"            \"price\": { \"type\": \"integer\" },\r",
+											"            \"sku\": { \"type\": \"integer\" },\r",
+											"            \"description\": { \"type\": \"string\" }\r",
+											"        },\r",
+											"        \"required\": [\"id\", \"name\", \"price\", \"sku\", \"description\"]\r",
+											"    }\r",
+											"}\r",
+											"  \r",
+											"const validate = ajv.compile(schemaProducts);\r",
+											"\r",
+											"const responseData = pm.response.json();\r",
+											"\r",
+											"const valid = validate(responseData);\r",
+											"\r",
+											"pm.test(\"Response time is less than 200ms\", function () {\r",
+											"    pm.expect(pm.response.responseTime).to.be.below(200);\r",
+											"});\r",
+											"pm.test(\"Status code is 200\", function () {\r",
+											"    pm.expect(pm.response).to.have.status(200);\r",
+											"});\r",
+											"pm.test(\"Content-Type is present\", function () {\r",
+											"    pm.expect(pm.response).to.have.header(\"Content-Type\");\r",
+											"});\r",
+											"pm.test(\"Schema is valid\", function (){\r",
+											"    if(!valid){\r",
+											"        console.log('Schema validation errors:', validate.errors);\r",
+											"    }\r",
+											"    pm.expect(valid, \"Schema errors: \" + JSON.stringify(validate.errors, null, 2)).to.be.true;\r",
+											"});\r",
+											"pm.test(\"Results limits by page size parameter as expected\", function() {\r",
+											"    const expectedPageSizeParam = pm.request.url.query.get('pageSize');\r",
+											"    pm.expect(responseData.length == expectedPageSizeParam || responseData.length < expectedPageSizeParam).to.be.true;\r",
+											"});\r",
+											"pm.test(\"Results fetches by page number parameter as expected\", function() {\r",
+											"    const pageParam = pm.request.url.query.get('page');\r",
+											"    const expectedPageParam = parseInt(pageParam, 10);\r",
+											"    \r",
+											"    const pageSizeParam = pm.request.url.query.get('pageSize');\r",
+											"    const expectedPageSizeParam = parseInt(pageSizeParam, 10)\r",
+											"\r",
+											"    const expectedStartIndex = (expectedPageParam - 1) * expectedPageSizeParam; \r",
+											"\r",
+											"    for (let i = 0; i < responseData.length; i++) {\r",
+											"        pm.expect(responseData[i].id).to.eql(expectedStartIndex + 1 + i);\r",
+											"    }\r",
+											"});\r",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/products?page=2&pageSize=3",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"products"
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "2"
+										},
+										{
+											"key": "pageSize",
+											"value": "3"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "List products sorting",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"const Ajv = require('ajv');\r",
+											"const ajv = new Ajv({ allErrors: true });\r",
+											"\r",
+											"const schemaProducts = {\r",
+											"    \"type\": \"array\",\r",
+											"    \"items\": {\r",
+											"        \"type\": \"object\",\r",
+											"        \"properties\": {\r",
+											"            \"id\": { \"type\": \"integer\" },\r",
+											"            \"name\": { \"type\": \"string\" },\r",
+											"            \"price\": { \"type\": \"integer\" },\r",
+											"            \"sku\": { \"type\": \"integer\" },\r",
+											"            \"description\": { \"type\": \"string\" }\r",
+											"        },\r",
+											"        \"required\": [\"id\", \"name\", \"price\", \"sku\", \"description\"]\r",
+											"    }\r",
+											"}\r",
+											"\r",
+											"const validate = ajv.compile(schemaProducts);\r",
+											"\r",
+											"const responseData = pm.response.json();\r",
+											"\r",
+											"const valid = validate(responseData);\r",
+											"\r",
+											"pm.test(\"Response time is less than 200ms\", function () {\r",
+											"    pm.expect(pm.response.responseTime).to.be.below(200);\r",
+											"});\r",
+											"pm.test(\"Status code is 200\", function () {\r",
+											"    pm.expect(pm.response).to.have.status(200);\r",
+											"});\r",
+											"pm.test(\"Content-Type is present\", function () {\r",
+											"    pm.expect(pm.response).to.have.header(\"Content-Type\");\r",
+											"});\r",
+											"pm.test(\"Schema is valid\", function (){\r",
+											"    if(!valid){\r",
+											"        console.log('Schema validation errors:', validate.errors);\r",
+											"    }\r",
+											"    pm.expect(valid, \"Schema errors: \" + JSON.stringify(validate.errors, null, 2)).to.be.true;\r",
+											"});\r",
+											"pm.test(\"Results sort by sort order and sort key parameters as expected\", function() {\r",
+											"    const expectedSortOrderParam = pm.request.url.query.get('sortOrder');\r",
+											"    pm.expect(expectedSortOrderParam).to.be.oneOf(['ASC', 'DESC'])\r",
+											"\r",
+											"    const expectedSortKeyParam = pm.request.url.query.get('sortKey');\r",
+											"\r",
+											"    if(expectedSortOrderParam === 'ASC'){\r",
+											"        for(let i = 0; i++; i < responseData.length - 1){\r",
+											"            pm.expect(responseData[i][expectedSortKeyParam]).to.be.lessThan(responseData[i + 1][expectedSortKeyParam])\r",
+											"        }\r",
+											"    }\r",
+											"    if(expectedSortOrderParam === 'DESC'){\r",
+											"        for(let i = 0; i++; i < responseData.length - 1){\r",
+											"            pm.expect(responseData[i][expectedSortKeyParam]).to.be.greaterThan(responseData[i + 1][expectedSortKeyParam])\r",
+											"        }\r",
+											"    }\r",
+											"\r",
+											"});\r",
+											"\r",
+											"\r",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/products?sortOrder=DESC&sortKey=price",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"products"
+									],
+									"query": [
+										{
+											"key": "sortOrder",
+											"value": "DESC"
+										},
+										{
+											"key": "sortKey",
+											"value": "price"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "List products",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"const Ajv = require('ajv');\r",
+											"const ajv = new Ajv({ allErrors: true });\r",
+											"\r",
+											"const schemaProducts = {\r",
+											"    \"type\": \"array\",\r",
+											"    \"items\": {\r",
+											"        \"type\": \"object\",\r",
+											"        \"properties\": {\r",
+											"            \"id\": { \"type\": \"integer\" },\r",
+											"            \"name\": { \"type\": \"string\" },\r",
+											"            \"price\": { \"type\": \"integer\" },\r",
+											"            \"sku\": { \"type\": \"integer\" },\r",
+											"            \"description\": { \"type\": \"string\" }\r",
+											"        },\r",
+											"        \"required\": [\"id\", \"name\", \"price\", \"sku\", \"description\"]\r",
+											"    }\r",
+											"}\r",
+											"\r",
+											"const validate = ajv.compile(schemaProducts);\r",
+											"\r",
+											"const responseData = pm.response.json();\r",
+											"\r",
+											"const valid = validate(responseData);\r",
+											"\r",
+											"pm.test(\"Response time is less than 200ms\", function () {\r",
+											"    pm.expect(pm.response.responseTime).to.be.below(200);\r",
+											"});\r",
+											"pm.test(\"Status code is 200\", function () {\r",
+											"    pm.expect(pm.response).to.have.status(200);\r",
+											"});\r",
+											"pm.test(\"Content-Type is present\", function () {\r",
+											"    pm.expect(pm.response).to.have.header(\"Content-Type\");\r",
+											"});\r",
+											"pm.test(\"Schema is valid\", function (){\r",
+											"    if(!valid){\r",
+											"        console.log('Schema validation errors:', validate.errors);\r",
+											"    }\r",
+											"    pm.expect(valid, \"Schema errors: \" + JSON.stringify(validate.errors, null, 2)).to.be.true;\r",
+											"});\r",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/products",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"products"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get product by ID",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"const Ajv = require('ajv');\r",
+											"const ajv = new Ajv({ allErrors: true });\r",
+											"\r",
+											"const schemaProduct = {\r",
+											"  \"type\": \"object\",\r",
+											"  \"properties\": {\r",
+											"    \"id\": {\r",
+											"      \"type\": \"integer\"\r",
+											"    },\r",
+											"    \"name\": {\r",
+											"      \"type\": \"string\"\r",
+											"    },\r",
+											"    \"price\": {\r",
+											"      \"type\": \"integer\"\r",
+											"    },\r",
+											"    \"sku\": {\r",
+											"      \"type\": \"integer\"\r",
+											"    },\r",
+											"    \"description\": {\r",
+											"      \"type\": \"string\"\r",
+											"    }\r",
+											"  },\r",
+											"  \"required\": [\r",
+											"    \"id\",\r",
+											"    \"name\",\r",
+											"    \"price\",\r",
+											"    \"sku\",\r",
+											"    \"description\"\r",
+											"  ]\r",
+											"}\r",
+											"\r",
+											"const validate = ajv.compile(schemaProduct);\r",
+											"\r",
+											"const responseData = pm.response.json();\r",
+											"\r",
+											"const valid = validate(responseData);\r",
+											"\r",
+											"pm.test(\"Response time is less than 200ms\", function () {\r",
+											"    pm.expect(pm.response.responseTime).to.be.below(200);\r",
+											"});\r",
+											"pm.test(\"Status code is 200\", function () {\r",
+											"    pm.expect(pm.response).to.have.status(200);\r",
+											"});\r",
+											"pm.test(\"Content-Type is present\", function () {\r",
+											"    pm.expect(pm.response).to.have.header(\"Content-Type\");\r",
+											"});\r",
+											"pm.test(\"Schema is valid\", function (){\r",
+											"    if(!valid){\r",
+											"        console.log('Schema validation errors:', validate.errors);\r",
+											"    }\r",
+											"    pm.expect(valid, \"Schema errors: \" + JSON.stringify(validate.errors, null, 2)).to.be.true;\r",
+											"});\r",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/products/{{product_id}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"products",
+										"{{product_id}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Update product",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"const Ajv = require('ajv');\r",
+											"const ajv = new Ajv({ allErrors: true });\r",
+											"\r",
+											"const schemaProduct = {\r",
+											"  \"type\": \"object\",\r",
+											"  \"properties\": {\r",
+											"    \"id\": {\r",
+											"      \"type\": \"integer\"\r",
+											"    },\r",
+											"    \"name\": {\r",
+											"      \"type\": \"string\"\r",
+											"    },\r",
+											"    \"price\": {\r",
+											"      \"type\": \"integer\"\r",
+											"    },\r",
+											"    \"sku\": {\r",
+											"      \"type\": \"integer\"\r",
+											"    },\r",
+											"    \"description\": {\r",
+											"      \"type\": \"string\"\r",
+											"    }\r",
+											"  },\r",
+											"  \"required\": [\r",
+											"    \"id\",\r",
+											"    \"name\",\r",
+											"    \"price\",\r",
+											"    \"sku\",\r",
+											"    \"description\"\r",
+											"  ]\r",
+											"}\r",
+											"\r",
+											"const validate = ajv.compile(schemaProduct);\r",
+											"\r",
+											"const responseData = pm.response.json();\r",
+											"\r",
+											"const valid = validate(responseData);\r",
+											"\r",
+											"pm.test(\"Response time is less than 200ms\", function () {\r",
+											"    pm.expect(pm.response.responseTime).to.be.below(200);\r",
+											"});\r",
+											"pm.test(\"Status code is 200\", function () {\r",
+											"    pm.expect(pm.response).to.have.status(200);\r",
+											"});\r",
+											"pm.test(\"Content-Type is present\", function () {\r",
+											"    pm.expect(pm.response).to.have.header(\"Content-Type\");\r",
+											"});\r",
+											"pm.test(\"Schema is valid\", function (){\r",
+											"    if(!valid){\r",
+											"        console.log('Schema validation errors:', validate.errors);\r",
+											"    }\r",
+											"    pm.expect(valid, \"Schema errors: \" + JSON.stringify(validate.errors, null, 2)).to.be.true;\r",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"id\": {{product_id}},\r\n    \"name\": \"changed banana\",\r\n    \"price\": 55,\r\n    \"sku\": 123321123,\r\n    \"description\": \"changed description\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/products",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"products"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Remove product by ID",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"const Ajv = require('ajv');\r",
+											"const ajv = new Ajv({ allErrors: true });\r",
+											"\r",
+											"const schemaProduct = {\r",
+											"  \"type\": \"object\",\r",
+											"  \"properties\": {\r",
+											"    \"id\": {\r",
+											"      \"type\": \"integer\"\r",
+											"    },\r",
+											"    \"name\": {\r",
+											"      \"type\": \"string\"\r",
+											"    },\r",
+											"    \"price\": {\r",
+											"      \"type\": \"integer\"\r",
+											"    },\r",
+											"    \"sku\": {\r",
+											"      \"type\": \"integer\"\r",
+											"    },\r",
+											"    \"description\": {\r",
+											"      \"type\": \"string\"\r",
+											"    }\r",
+											"  },\r",
+											"  \"required\": [\r",
+											"    \"id\",\r",
+											"    \"name\",\r",
+											"    \"price\",\r",
+											"    \"sku\",\r",
+											"    \"description\"\r",
+											"  ]\r",
+											"}\r",
+											"\r",
+											"const validate = ajv.compile(schemaProduct);\r",
+											"\r",
+											"const responseData = pm.response.json();\r",
+											"\r",
+											"const valid = validate(responseData);\r",
+											"\r",
+											"pm.test(\"Response time is less than 200ms\", function () {\r",
+											"    pm.expect(pm.response.responseTime).to.be.below(200);\r",
+											"});\r",
+											"pm.test(\"Status code is 200\", function () {\r",
+											"    pm.expect(pm.response).to.have.status(200);\r",
+											"});\r",
+											"pm.test(\"Content-Type is present\", function () {\r",
+											"    pm.expect(pm.response).to.have.header(\"Content-Type\");\r",
+											"});\r",
+											"pm.test(\"Schema is valid\", function (){\r",
+											"    if(!valid){\r",
+											"        console.log('Schema validation errors:', validate.errors);\r",
+											"    }\r",
+											"    pm.expect(valid, \"Schema errors: \" + JSON.stringify(validate.errors, null, 2)).to.be.true;\r",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/products/{{product_id}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"products",
+										"{{product_id}}"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Negative testing [Bug found]",
+					"item": [
+						{
+							"name": "Create product with invalid body [Bug found]",
+							"item": [
+								{
+									"name": "Create product without price",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Response time is less than 200ms\", function () {\r",
+													"    pm.expect(pm.response.responseTime).to.be.below(200);\r",
+													"});\r",
+													"pm.test(\"Status code is 400\", function () {\r",
+													"    pm.expect(pm.response).to.have.status(400);\r",
+													"});\r",
+													"pm.test(\"Content-Type is present\", function () {\r",
+													"    pm.expect(pm.response).to.have.header(\"Content-Type\");\r",
+													"});\r",
+													"pm.test(\"Response body is empty\", function (){\r",
+													"    pm.expect(pm.response.text()).to.be.empty;\r",
+													"})"
+												],
+												"type": "text/javascript",
+												"packages": {}
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n    \"name\": \"invalid orange\",\r\n    \"sku\": 123321123,\r\n    \"description\": \"wouh\"\r\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{baseUrl}}/products",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"products"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "List products",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"const Ajv = require('ajv');\r",
+													"const ajv = new Ajv({ allErrors: true });\r",
+													"\r",
+													"const schemaProducts = {\r",
+													"    \"type\": \"array\",\r",
+													"    \"items\": {\r",
+													"        \"type\": \"object\",\r",
+													"        \"properties\": {\r",
+													"            \"id\": { \"type\": \"integer\" },\r",
+													"            \"name\": { \"type\": \"string\" },\r",
+													"            \"price\": { \"type\": \"integer\" },\r",
+													"            \"sku\": { \"type\": \"integer\" },\r",
+													"            \"description\": { \"type\": \"string\" }\r",
+													"        },\r",
+													"        \"required\": [\"id\", \"name\", \"price\", \"sku\", \"description\"]\r",
+													"    }\r",
+													"}\r",
+													"\r",
+													"const validate = ajv.compile(schemaProducts);\r",
+													"\r",
+													"const responseData = pm.response.json();\r",
+													"\r",
+													"const valid = validate(responseData);\r",
+													"\r",
+													"pm.test(\"Response time is less than 200ms\", function () {\r",
+													"    pm.expect(pm.response.responseTime).to.be.below(200);\r",
+													"});\r",
+													"pm.test(\"Status code is 200\", function () {\r",
+													"    pm.expect(pm.response).to.have.status(200);\r",
+													"});\r",
+													"pm.test(\"Content-Type is present\", function () {\r",
+													"    pm.expect(pm.response).to.have.header(\"Content-Type\");\r",
+													"});\r",
+													"\r",
+													"pm.test(\"Schema is valid\", function (){\r",
+													"    if(!valid){\r",
+													"        console.log('Schema validation errors:', validate.errors);\r",
+													"        //save ID to delete invalid product\r",
+													"        validate.errors.forEach(error => {\r",
+													"            const indexMatch = error.dataPath.match(/\\d+/);\r",
+													"            if (indexMatch) {\r",
+													"                const index = parseInt(indexMatch[0], 10);\r",
+													"                const invalidObject = responseData[index];\r",
+													"                    if (invalidObject && invalidObject.id !== undefined) {\r",
+													"                        pm.collectionVariables.set(\"product_invalid_object_id\", invalidObject.id);\r",
+													"                    }\r",
+													"            }\r",
+													"        });\r",
+													"    }\r",
+													"    pm.expect(valid, \"Schema errors: \" + JSON.stringify(validate.errors, null, 2)).to.be.true;\r",
+													"});\r",
+													"\r",
+													"\r",
+													""
+												],
+												"type": "text/javascript",
+												"packages": {}
+											}
+										}
+									],
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{baseUrl}}/products",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"products"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Remove product without price",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"const Ajv = require('ajv');\r",
+													"const ajv = new Ajv({ allErrors: true });\r",
+													"\r",
+													"const schemaProductWithoutPrice = {\r",
+													"  \"type\": \"object\",\r",
+													"  \"properties\": {\r",
+													"    \"id\": {\r",
+													"      \"type\": \"integer\"\r",
+													"    },\r",
+													"    \"name\": {\r",
+													"      \"type\": \"string\"\r",
+													"    },\r",
+													"    \"sku\": {\r",
+													"      \"type\": \"integer\"\r",
+													"    },\r",
+													"    \"description\": {\r",
+													"      \"type\": \"string\"\r",
+													"    }\r",
+													"  },\r",
+													"  \"required\": [\r",
+													"    \"id\",\r",
+													"    \"name\",\r",
+													"    \"sku\",\r",
+													"    \"description\"\r",
+													"  ]\r",
+													"}\r",
+													"\r",
+													"const validate = ajv.compile(schemaProductWithoutPrice);\r",
+													"\r",
+													"const responseData = pm.response.json();\r",
+													"\r",
+													"const valid = validate(responseData);\r",
+													"\r",
+													"pm.test(\"Response time is less than 200ms\", function () {\r",
+													"    pm.expect(pm.response.responseTime).to.be.below(200);\r",
+													"});\r",
+													"pm.test(\"Status code is 200\", function () {\r",
+													"    pm.expect(pm.response).to.have.status(200);\r",
+													"});\r",
+													"pm.test(\"Content-Type is present\", function () {\r",
+													"    pm.expect(pm.response).to.have.header(\"Content-Type\");\r",
+													"});\r",
+													"pm.test(\"Schema is valid\", function (){\r",
+													"    if(!valid){\r",
+													"        console.log('Schema validation errors:', validate.errors);\r",
+													"    }\r",
+													"    pm.expect(valid, \"Schema errors: \" + JSON.stringify(validate.errors, null, 2)).to.be.true;\r",
+													"});"
+												],
+												"type": "text/javascript",
+												"packages": {}
+											}
+										}
+									],
+									"request": {
+										"method": "DELETE",
+										"header": [],
+										"url": {
+											"raw": "{{baseUrl}}/products/{{product_invalid_object_id}}",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"products",
+												"{{product_invalid_object_id}}"
+											]
+										}
+									},
+									"response": []
+								}
+							],
+							"description": "This folder contains a test for creating a product with an invalid body (missing price field). The POST request \"Create product without price\" has a 400 status code and an empty response body. According to this, the object should not be created without some fields missing.  \nBut the next GET request \"List products\" in this folder, checks the response body for schema compliance, and this assertion fails because the object with an invalid body was actually created. In the if block of the schema validation test, the ID of the invalid object is extracted from the response and stored as a collection variable.  \nThe next DELETE request \"Delete product without price\" deletes the invalid object by the ID of the collection variable, so as not to leave invalid data in the DB, and this invalid data will also not affect the results of other tests; no matter how many times we need to run the tests."
+						},
+						{
+							"name": "Search by invalid id",
+							"item": [
+								{
+									"name": "Get product by invalid ID",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"const Ajv = require('ajv');\r",
+													"const ajv = new Ajv({ allErrors: true });\r",
+													"\r",
+													"const schemaProductWithInvalidId = {\"type\": \"object\"}\r",
+													"\r",
+													"const validate = ajv.compile(schemaProductWithInvalidId);\r",
+													"const responseData = pm.response.json();\r",
+													"const valid = validate(responseData);\r",
+													"\r",
+													"pm.test(\"Response time is less than 200ms\", function () {\r",
+													"    pm.expect(pm.response.responseTime).to.be.below(200);\r",
+													"});\r",
+													"pm.test(\"Status code is 404\", function () {\r",
+													"    pm.expect(pm.response).to.have.status(404);\r",
+													"});\r",
+													"pm.test(\"Content-Type is present\", function () {\r",
+													"    pm.expect(pm.response).to.have.header(\"Content-Type\");\r",
+													"});\r",
+													"pm.test(\"Schema is valid\", function (){\r",
+													"    if(!valid){\r",
+													"        console.log('Schema validation errors:', validate.errors);\r",
+													"    }\r",
+													"    pm.expect(valid, \"Schema errors: \" + JSON.stringify(validate.errors, null, 2)).to.be.true;\r",
+													"});\r",
+													""
+												],
+												"type": "text/javascript",
+												"packages": {}
+											}
+										}
+									],
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{baseUrl}}/products/{{product_invalid_id}}",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"products",
+												"{{product_invalid_id}}"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Update product with invalid ID",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Response time is less than 200ms\", function () {\r",
+													"    pm.expect(pm.response.responseTime).to.be.below(200);\r",
+													"});\r",
+													"pm.test(\"Status code is 404\", function () {\r",
+													"    pm.response.to.have.status(404);\r",
+													"});\r",
+													"pm.test(\"Content-Type is present\", function () {\r",
+													"    pm.response.to.have.header(\"Content-Type\");\r",
+													"});\r",
+													"pm.test(\"Response body is a string that contains text and an invalid ID as expected\", function (){\r",
+													"    pm.expect(pm.response.text()).to.be.a('string').and.not.empty;\r",
+													"    pm.expect(pm.response.text()).to.include(\"Item not found with ID\").and.include(pm.collectionVariables.get(\"product_invalid_id\"));\r",
+													"})"
+												],
+												"type": "text/javascript",
+												"packages": {}
+											}
+										}
+									],
+									"request": {
+										"method": "PUT",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n    \"id\": {{product_invalid_id}},\r\n    \"name\": \"invalid banana\",\r\n    \"price\": 55,\r\n    \"sku\": 123321123,\r\n    \"description\": \"description\"\r\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{baseUrl}}/products",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"products"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Remove product by invalid ID",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Response time is less than 200ms\", function () {\r",
+													"    pm.expect(pm.response.responseTime).to.be.below(200);\r",
+													"});\r",
+													"pm.test(\"Status code is 200\", function () {\r",
+													"    pm.expect(pm.response).to.have.status(200);\r",
+													"});\r",
+													"pm.test(\"Content-Type is present\", function () {\r",
+													"    pm.expect(pm.response).to.have.header(\"Content-Type\");\r",
+													"});\r",
+													"pm.test(\"Response body is empty\", function (){\r",
+													"    pm.expect(pm.response.text()).to.be.empty;\r",
+													"})"
+												],
+												"type": "text/javascript",
+												"packages": {}
+											}
+										}
+									],
+									"request": {
+										"method": "DELETE",
+										"header": [],
+										"url": {
+											"raw": "{{baseUrl}}/products/{{product_invalid_id}}",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"products",
+												"{{product_invalid_id}}"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Orders",
+			"item": [
+				{
+					"name": "Positive testing",
+					"item": [
+						{
+							"name": "Create order",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"const Ajv = require('ajv');\r",
+											"const ajv = new Ajv({ allErrors: true });\r",
+											"\r",
+											"const schemaOrder = {\r",
+											"  \"type\": \"object\",\r",
+											"  \"properties\": {\r",
+											"    \"id\": {\r",
+											"      \"type\": \"integer\"\r",
+											"    },\r",
+											"    \"name\": {\r",
+											"      \"type\": \"string\"\r",
+											"    },\r",
+											"    \"sku\": {\r",
+											"      \"type\": \"integer\"\r",
+											"    }\r",
+											"  },\r",
+											"  \"required\": [\r",
+											"    \"id\",\r",
+											"    \"name\",\r",
+											"    \"sku\"\r",
+											"  ]\r",
+											"}\r",
+											"\r",
+											"const validate = ajv.compile(schemaOrder);\r",
+											"\r",
+											"const responseData = pm.response.json();\r",
+											"\r",
+											"const valid = validate(responseData);\r",
+											"\r",
+											"pm.test(\"Response time is less than 200ms\", function () {\r",
+											"    pm.expect(pm.response.responseTime).to.be.below(200);\r",
+											"});\r",
+											"pm.test(\"Status code is 201\", function () {\r",
+											"    pm.expect(pm.response).to.have.status(201);\r",
+											"});\r",
+											"pm.test(\"Content-Type is present\", function () {\r",
+											"    pm.expect(pm.response).to.have.header(\"Content-Type\");\r",
+											"});\r",
+											"pm.test(\"Schema is valid\", function (){\r",
+											"    if(!valid){\r",
+											"        console.log('Schema validation errors:', validate.errors);\r",
+											"    }\r",
+											"    pm.expect(valid, \"Schema errors: \" + JSON.stringify(validate.errors, null, 2)).to.be.true;\r",
+											"});\r",
+											"\r",
+											"pm.collectionVariables.set(\"order_id\", responseData.id);"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"name\": \"order5\",\r\n    \"sku\": 123425445656765\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/orders",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"orders"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "List orders pagination",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"const Ajv = require('ajv');\r",
+											"const ajv = new Ajv({ allErrors: true });\r",
+											"\r",
+											"const schemaOrders = {\r",
+											"    \"type\": \"array\",\r",
+											"    \"items\": {\r",
+											"        \"type\": \"object\",\r",
+											"        \"properties\": {\r",
+											"            \"id\": { \"type\": \"integer\" },\r",
+											"            \"name\": { \"type\": \"string\" },\r",
+											"            \"sku\": { \"type\": \"integer\" }\r",
+											"        },\r",
+											"        \"required\": [\"id\", \"name\", \"sku\"]\r",
+											"    }\r",
+											"}\r",
+											"\r",
+											"const validate = ajv.compile(schemaOrders);\r",
+											"\r",
+											"const responseData = pm.response.json();\r",
+											"\r",
+											"const valid = validate(responseData);\r",
+											"\r",
+											"pm.test(\"Response time is less than 200ms\", function () {\r",
+											"    pm.expect(pm.response.responseTime).to.be.below(200);\r",
+											"});\r",
+											"pm.test(\"Status code is 200\", function () {\r",
+											"    pm.expect(pm.response).to.have.status(200);\r",
+											"});\r",
+											"pm.test(\"Content-Type is present\", function () {\r",
+											"    pm.expect(pm.response).to.have.header(\"Content-Type\");\r",
+											"});\r",
+											"pm.test(\"Schema is valid\", function (){\r",
+											"    if(!valid){\r",
+											"        console.log('Schema validation errors:', validate.errors);\r",
+											"    }\r",
+											"    pm.expect(valid, \"Schema errors: \" + JSON.stringify(validate.errors, null, 2)).to.be.true;\r",
+											"});\r",
+											"pm.test(\"Results limits by page size parameter as expected\", function() {\r",
+											"    const expectedPageSizeParam = pm.request.url.query.get('pageSize');\r",
+											"    pm.expect(responseData.length == expectedPageSizeParam || responseData.length < expectedPageSizeParam).to.be.true;\r",
+											"});\r",
+											"pm.test(\"Results fetches by page number parameter as expected\", function() {\r",
+											"    const pageParam = pm.request.url.query.get('page');\r",
+											"    const expectedPageParam = parseInt(pageParam, 10);\r",
+											"    \r",
+											"    const pageSizeParam = pm.request.url.query.get('pageSize');\r",
+											"    const expectedPageSizeParam = parseInt(pageSizeParam, 10)\r",
+											"\r",
+											"    const expectedStartIndex = (expectedPageParam - 1) * expectedPageSizeParam; \r",
+											"\r",
+											"    for (let i = 0; i < responseData.length; i++) {\r",
+											"        pm.expect(responseData[i].id).to.eql(expectedStartIndex + 1 + i);\r",
+											"    }\r",
+											"});\r",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/orders?page=3&pageSize=1",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"orders"
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "3"
+										},
+										{
+											"key": "pageSize",
+											"value": "1"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "List orders sorting",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"const Ajv = require('ajv');\r",
+											"const ajv = new Ajv({ allErrors: true });\r",
+											"\r",
+											"const schemaOrders = {\r",
+											"    \"type\": \"array\",\r",
+											"    \"items\": {\r",
+											"        \"type\": \"object\",\r",
+											"        \"properties\": {\r",
+											"            \"id\": { \"type\": \"integer\" },\r",
+											"            \"name\": { \"type\": \"string\" },\r",
+											"            \"sku\": { \"type\": \"integer\" }\r",
+											"        },\r",
+											"        \"required\": [\"id\", \"name\", \"sku\"]\r",
+											"    }\r",
+											"}\r",
+											"\r",
+											"const validate = ajv.compile(schemaOrders);\r",
+											"\r",
+											"const responseData = pm.response.json();\r",
+											"\r",
+											"const valid = validate(responseData);\r",
+											"\r",
+											"pm.test(\"Response time is less than 200ms\", function () {\r",
+											"    pm.expect(pm.response.responseTime).to.be.below(200);\r",
+											"});\r",
+											"pm.test(\"Status code is 200\", function () {\r",
+											"    pm.expect(pm.response).to.have.status(200);\r",
+											"});\r",
+											"pm.test(\"Content-Type is present\", function () {\r",
+											"    pm.expect(pm.response).to.have.header(\"Content-Type\");\r",
+											"});\r",
+											"pm.test(\"Schema is valid\", function (){\r",
+											"    if(!valid){\r",
+											"        console.log('Schema validation errors:', validate.errors);\r",
+											"    }\r",
+											"    pm.expect(valid, \"Schema errors: \" + JSON.stringify(validate.errors, null, 2)).to.be.true;\r",
+											"});\r",
+											"pm.test(\"Results sort by sort order and sort key parameters as expected\", function() {\r",
+											"    const expectedSortOrderParam = pm.request.url.query.get('sortOrder');\r",
+											"    pm.expect(expectedSortOrderParam).to.be.oneOf(['ASC', 'DESC'])\r",
+											"\r",
+											"    const expectedSortKeyParam = pm.request.url.query.get('sortKey');\r",
+											"\r",
+											"    if(expectedSortOrderParam === 'ASC'){\r",
+											"        for(let i = 0; i++; i < responseData.length - 1){\r",
+											"            pm.expect(responseData[i][expectedSortKeyParam]).to.be.lessThan(responseData[i + 1][expectedSortKeyParam])\r",
+											"        }\r",
+											"    }\r",
+											"    if(expectedSortOrderParam === 'DESC'){\r",
+											"        for(let i = 0; i++; i < responseData.length - 1){\r",
+											"            pm.expect(responseData[i][expectedSortKeyParam]).to.be.greaterThan(responseData[i + 1][expectedSortKeyParam])\r",
+											"        }\r",
+											"    }\r",
+											"\r",
+											"});\r",
+											"\r",
+											"\r",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/orders?sortOrder=DESC&sortKey=id",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"orders"
+									],
+									"query": [
+										{
+											"key": "sortOrder",
+											"value": "DESC"
+										},
+										{
+											"key": "sortKey",
+											"value": "id"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "List orders",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"const Ajv = require('ajv');\r",
+											"const ajv = new Ajv({ allErrors: true });\r",
+											"\r",
+											"const schemaOrders = {\r",
+											"    \"type\": \"array\",\r",
+											"    \"items\": {\r",
+											"        \"type\": \"object\",\r",
+											"        \"properties\": {\r",
+											"            \"id\": { \"type\": \"integer\" },\r",
+											"            \"name\": { \"type\": \"string\" },\r",
+											"            \"sku\": { \"type\": \"integer\" }\r",
+											"        },\r",
+											"        \"required\": [\"id\", \"name\", \"sku\"]\r",
+											"    }\r",
+											"}\r",
+											"\r",
+											"const validate = ajv.compile(schemaOrders);\r",
+											"\r",
+											"const responseData = pm.response.json();\r",
+											"\r",
+											"const valid = validate(responseData);\r",
+											"\r",
+											"pm.test(\"Response time is less than 200ms\", function () {\r",
+											"    pm.expect(pm.response.responseTime).to.be.below(200);\r",
+											"});\r",
+											"pm.test(\"Status code is 200\", function () {\r",
+											"    pm.expect(pm.response).to.have.status(200);\r",
+											"});\r",
+											"pm.test(\"Content-Type is present\", function () {\r",
+											"    pm.expect(pm.response).to.have.header(\"Content-Type\");\r",
+											"});\r",
+											"pm.test(\"Schema is valid\", function (){\r",
+											"    if(!valid){\r",
+											"        console.log('Schema validation errors:', validate.errors);\r",
+											"    }\r",
+											"    pm.expect(valid, \"Schema errors: \" + JSON.stringify(validate.errors, null, 2)).to.be.true;\r",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/orders",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"orders"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get order by ID",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"const Ajv = require('ajv');\r",
+											"const ajv = new Ajv({ allErrors: true });\r",
+											"\r",
+											"const schemaOrder = {\r",
+											"  \"type\": \"object\",\r",
+											"  \"properties\": {\r",
+											"    \"id\": {\r",
+											"      \"type\": \"integer\"\r",
+											"    },\r",
+											"    \"name\": {\r",
+											"      \"type\": \"string\"\r",
+											"    },\r",
+											"    \"sku\": {\r",
+											"      \"type\": \"integer\"\r",
+											"    }\r",
+											"  },\r",
+											"  \"required\": [\r",
+											"    \"id\",\r",
+											"    \"name\",\r",
+											"    \"sku\"\r",
+											"  ]\r",
+											"}\r",
+											"\r",
+											"const validate = ajv.compile(schemaOrder);\r",
+											"\r",
+											"const responseData = pm.response.json();\r",
+											"\r",
+											"const valid = validate(responseData);\r",
+											"\r",
+											"pm.test(\"Response time is less than 200ms\", function () {\r",
+											"    pm.expect(pm.response.responseTime).to.be.below(200);\r",
+											"});\r",
+											"pm.test(\"Status code is 200\", function () {\r",
+											"    pm.expect(pm.response).to.have.status(200);\r",
+											"});\r",
+											"pm.test(\"Content-Type is present\", function () {\r",
+											"    pm.expect(pm.response).to.have.header(\"Content-Type\");\r",
+											"});\r",
+											"pm.test(\"Schema is valid\", function (){\r",
+											"    if(!valid){\r",
+											"        console.log('Schema validation errors:', validate.errors);\r",
+											"    }\r",
+											"    pm.expect(valid, \"Schema errors: \" + JSON.stringify(validate.errors, null, 2)).to.be.true;\r",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/orders/{{order_id}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"orders",
+										"{{order_id}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Update order",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"const Ajv = require('ajv');\r",
+											"const ajv = new Ajv({ allErrors: true });\r",
+											"\r",
+											"const schemaOrder = {\r",
+											"  \"type\": \"object\",\r",
+											"  \"properties\": {\r",
+											"    \"id\": {\r",
+											"      \"type\": \"integer\"\r",
+											"    },\r",
+											"    \"name\": {\r",
+											"      \"type\": \"string\"\r",
+											"    },\r",
+											"    \"sku\": {\r",
+											"      \"type\": \"integer\"\r",
+											"    }\r",
+											"  },\r",
+											"  \"required\": [\r",
+											"    \"id\",\r",
+											"    \"name\",\r",
+											"    \"sku\"\r",
+											"  ]\r",
+											"}\r",
+											"\r",
+											"const validate = ajv.compile(schemaOrder);\r",
+											"\r",
+											"const responseData = pm.response.json();\r",
+											"\r",
+											"const valid = validate(responseData);\r",
+											"\r",
+											"pm.test(\"Response time is less than 200ms\", function () {\r",
+											"    pm.expect(pm.response.responseTime).to.be.below(200);\r",
+											"});\r",
+											"pm.test(\"Status code is 200\", function () {\r",
+											"    pm.expect(pm.response).to.have.status(200);\r",
+											"});\r",
+											"pm.test(\"Content-Type is present\", function () {\r",
+											"    pm.expect(pm.response).to.have.header(\"Content-Type\");\r",
+											"});\r",
+											"pm.test(\"Schema is valid\", function (){\r",
+											"    if(!valid){\r",
+											"        console.log('Schema validation errors:', validate.errors);\r",
+											"    }\r",
+											"    pm.expect(valid, \"Schema errors: \" + JSON.stringify(validate.errors, null, 2)).to.be.true;\r",
+											"});\r",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"id\": {{order_id}},\r\n    \"name\": \"order5\",\r\n    \"sku\": 123425445656765\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/orders",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"orders"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Remove order by ID",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"const Ajv = require('ajv');\r",
+											"const ajv = new Ajv({ allErrors: true });\r",
+											"\r",
+											"const schemaOrder = {\r",
+											"  \"type\": \"object\",\r",
+											"  \"properties\": {\r",
+											"    \"id\": {\r",
+											"      \"type\": \"integer\"\r",
+											"    },\r",
+											"    \"name\": {\r",
+											"      \"type\": \"string\"\r",
+											"    },\r",
+											"    \"sku\": {\r",
+											"      \"type\": \"integer\"\r",
+											"    }\r",
+											"  },\r",
+											"  \"required\": [\r",
+											"    \"id\",\r",
+											"    \"name\",\r",
+											"    \"sku\"\r",
+											"  ]\r",
+											"}\r",
+											"\r",
+											"const validate = ajv.compile(schemaOrder);\r",
+											"\r",
+											"const responseData = pm.response.json();\r",
+											"\r",
+											"const valid = validate(responseData);\r",
+											"\r",
+											"pm.test(\"Response time is less than 200ms\", function () {\r",
+											"    pm.expect(pm.response.responseTime).to.be.below(200);\r",
+											"});\r",
+											"pm.test(\"Status code is 200\", function () {\r",
+											"    pm.expect(pm.response).to.have.status(200);\r",
+											"});\r",
+											"pm.test(\"Content-Type is present\", function () {\r",
+											"    pm.expect(pm.response).to.have.header(\"Content-Type\");\r",
+											"});\r",
+											"pm.test(\"Schema is valid\", function (){\r",
+											"    if(!valid){\r",
+											"        console.log('Schema validation errors:', validate.errors);\r",
+											"    }\r",
+											"    pm.expect(valid, \"Schema errors: \" + JSON.stringify(validate.errors, null, 2)).to.be.true;\r",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/orders/{{order_id}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"orders",
+										"{{order_id}}"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Negative testing [Bug found]",
+					"item": [
+						{
+							"name": "Create order with invalid body [Bug found]",
+							"item": [
+								{
+									"name": "Create order without sku",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Response time is less than 200ms\", function () {\r",
+													"    pm.expect(pm.response.responseTime).to.be.below(200);\r",
+													"});\r",
+													"pm.test(\"Status code is 400\", function () {\r",
+													"    pm.expect(pm.response).to.have.status(400);\r",
+													"});\r",
+													"pm.test(\"Content-Type is present\", function () {\r",
+													"    pm.expect(pm.response).to.have.header(\"Content-Type\");\r",
+													"});\r",
+													"pm.test(\"Response body is empty\", function (){\r",
+													"    pm.expect(pm.response.text()).to.be.empty;\r",
+													"})"
+												],
+												"type": "text/javascript",
+												"packages": {}
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n    \"name\": \"order9\"\r\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{baseUrl}}/orders",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"orders"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "List orders",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"const Ajv = require('ajv');\r",
+													"const ajv = new Ajv({ allErrors: true });\r",
+													"\r",
+													"const schemaOrders = {\r",
+													"    \"type\": \"array\",\r",
+													"    \"items\": {\r",
+													"        \"type\": \"object\",\r",
+													"        \"properties\": {\r",
+													"            \"id\": { \"type\": \"integer\" },\r",
+													"            \"name\": { \"type\": \"string\" },\r",
+													"            \"sku\": { \"type\": \"integer\" }\r",
+													"        },\r",
+													"        \"required\": [\"id\", \"name\", \"sku\"]\r",
+													"    }\r",
+													"}\r",
+													"\r",
+													"const validate = ajv.compile(schemaOrders);\r",
+													"\r",
+													"const responseData = pm.response.json();\r",
+													"\r",
+													"const valid = validate(responseData);\r",
+													"\r",
+													"pm.test(\"Response time is less than 200ms\", function () {\r",
+													"    pm.expect(pm.response.responseTime).to.be.below(200);\r",
+													"});\r",
+													"pm.test(\"Status code is 200\", function () {\r",
+													"    pm.expect(pm.response).to.have.status(200);\r",
+													"});\r",
+													"pm.test(\"Content-Type is present\", function () {\r",
+													"    pm.expect(pm.response).to.have.header(\"Content-Type\");\r",
+													"});\r",
+													"pm.test(\"Schema is valid\", function (){\r",
+													"    if(!valid){\r",
+													"        console.log('Schema validation errors:', validate.errors);\r",
+													"        //save ID to delete invalid order\r",
+													"        validate.errors.forEach(error => {\r",
+													"            const indexMatch = error.dataPath.match(/\\d+/);\r",
+													"            if (indexMatch) {\r",
+													"                const index = parseInt(indexMatch[0], 10);\r",
+													"                const invalidObject = responseData[index];\r",
+													"                \r",
+													"                if (invalidObject && invalidObject.id !== undefined) {\r",
+													"                    pm.collectionVariables.set(\"order_invalid_object_id\", invalidObject.id);\r",
+													"                }\r",
+													"            }\r",
+													"        });\r",
+													"    }\r",
+													"    pm.expect(valid, \"Schema errors: \" + JSON.stringify(validate.errors, null, 2)).to.be.true;\r",
+													"});"
+												],
+												"type": "text/javascript",
+												"packages": {}
+											}
+										}
+									],
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{baseUrl}}/orders",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"orders"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Remove order without sku",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"const Ajv = require('ajv');\r",
+													"const ajv = new Ajv({ allErrors: true });\r",
+													"\r",
+													"const schemaOrderWithoutSku = {\r",
+													"  \"type\": \"object\",\r",
+													"  \"properties\": {\r",
+													"    \"id\": {\r",
+													"      \"type\": \"integer\"\r",
+													"    },\r",
+													"    \"name\": {\r",
+													"      \"type\": \"string\"\r",
+													"    }\r",
+													"  },\r",
+													"  \"required\": [\r",
+													"    \"id\",\r",
+													"    \"name\"\r",
+													"  ]\r",
+													"}\r",
+													"\r",
+													"const validate = ajv.compile(schemaOrderWithoutSku);\r",
+													"\r",
+													"const responseData = pm.response.json();\r",
+													"\r",
+													"const valid = validate(responseData);\r",
+													"\r",
+													"pm.test(\"Response time is less than 200ms\", function () {\r",
+													"    pm.expect(pm.response.responseTime).to.be.below(200);\r",
+													"});\r",
+													"pm.test(\"Status code is 200\", function () {\r",
+													"    pm.expect(pm.response).to.have.status(200);\r",
+													"});\r",
+													"pm.test(\"Content-Type is present\", function () {\r",
+													"    pm.expect(pm.response).to.have.header(\"Content-Type\");\r",
+													"});\r",
+													"pm.test(\"Schema is valid\", function (){\r",
+													"    if(!valid){\r",
+													"        console.log('Schema validation errors:', validate.errors);\r",
+													"    }\r",
+													"    pm.expect(valid, \"Schema errors: \" + JSON.stringify(validate.errors, null, 2)).to.be.true;\r",
+													"});"
+												],
+												"type": "text/javascript",
+												"packages": {}
+											}
+										}
+									],
+									"request": {
+										"method": "DELETE",
+										"header": [],
+										"url": {
+											"raw": "{{baseUrl}}/orders/{{order_invalid_object_id}}",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"orders",
+												"{{order_invalid_object_id}}"
+											]
+										}
+									},
+									"response": []
+								}
+							],
+							"description": "This folder contains a test for creating a order with an invalid body (missing sku field).\n\nThe POST request \"Create order without sku\" has a 400 status code and an empty response body. According to this, the object should not be created without some fields missing.  \nBut the next GET request \"List orders\" in this folder, checks the response body for schema compliance, and this assertion fails because the object with an invalid body was actually created. In the if block of the schema validation test, the ID of the invalid object is extracted from the response and stored as a collection variable.  \nThe next DELETE request \"Delete order without sku\" deletes the invalid object by the ID of the collection variable, so as not to leave invalid data in the DB, and this invalid data will also not affect the results of other tests; no matter how many times we need to run the tests."
+						},
+						{
+							"name": "Search by invalid id",
+							"item": [
+								{
+									"name": "Get order by invalid ID",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"const Ajv = require('ajv');\r",
+													"const ajv = new Ajv({ allErrors: true });\r",
+													"\r",
+													"const schemaOrderWithInvalidId = {\r",
+													"  \"type\": \"object\",\r",
+													"}\r",
+													"\r",
+													"const validate = ajv.compile(schemaOrderWithInvalidId);\r",
+													"\r",
+													"const responseData = pm.response.json();\r",
+													"\r",
+													"const valid = validate(responseData);\r",
+													"\r",
+													"pm.test(\"Response time is less than 200ms\", function () {\r",
+													"    pm.expect(pm.response.responseTime).to.be.below(200);\r",
+													"});\r",
+													"pm.test(\"Status code is 404\", function () {\r",
+													"    pm.expect(pm.response).to.have.status(404);\r",
+													"});\r",
+													"pm.test(\"Content-Type is present\", function () {\r",
+													"    pm.expect(pm.response).to.have.header(\"Content-Type\");\r",
+													"});\r",
+													"pm.test(\"Schema is valid\", function (){\r",
+													"    if(!valid){\r",
+													"        console.log('Schema validation errors:', validate.errors);\r",
+													"    }\r",
+													"    pm.expect(valid, \"Schema errors: \" + JSON.stringify(validate.errors, null, 2)).to.be.true;\r",
+													"});"
+												],
+												"type": "text/javascript",
+												"packages": {}
+											}
+										}
+									],
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{baseUrl}}/orders/{{order_invalid_id}}",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"orders",
+												"{{order_invalid_id}}"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Update order with invalid ID",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Response time is less than 200ms\", function () {\r",
+													"    pm.expect(pm.response.responseTime).to.be.below(200);\r",
+													"});\r",
+													"pm.test(\"Status code is 404\", function () {\r",
+													"    pm.expect(pm.response).to.have.status(404);\r",
+													"});\r",
+													"pm.test(\"Content-Type is present\", function () {\r",
+													"    pm.expect(pm.response).to.have.header(\"Content-Type\");\r",
+													"});\r",
+													"pm.test(\"Response body is a string that contains text and an invalid ID as expected\", function (){\r",
+													"    pm.expect(pm.response.text()).to.be.a('string').and.not.empty;\r",
+													"    pm.expect(pm.response.text()).to.include(\"Item not found with ID\").and.include(pm.collectionVariables.get(\"order_invalid_id\"));\r",
+													"})"
+												],
+												"type": "text/javascript",
+												"packages": {}
+											}
+										}
+									],
+									"request": {
+										"method": "PUT",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n    \"id\": {{order_invalid_id}},\r\n    \"name\": \"order5\",\r\n    \"sku\": 123425445656765\r\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{baseUrl}}/orders",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"orders"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Remove order by invalid ID",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Response time is less than 200ms\", function () {\r",
+													"    pm.expect(pm.response.responseTime).to.be.below(200);\r",
+													"});\r",
+													"pm.test(\"Status code is 200\", function () {\r",
+													"    pm.expect(pm.response).to.have.status(200);\r",
+													"});\r",
+													"pm.test(\"Content-Type is present\", function () {\r",
+													"    pm.expect(pm.response).to.have.header(\"Content-Type\");\r",
+													"});\r",
+													"pm.test(\"Response body is empty\", function (){\r",
+													"    pm.expect(pm.response.text()).to.be.empty;\r",
+													"})"
+												],
+												"type": "text/javascript",
+												"packages": {}
+											}
+										}
+									],
+									"request": {
+										"method": "DELETE",
+										"header": [],
+										"url": {
+											"raw": "{{baseUrl}}/orders/{{order_invalid_id}}",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"orders",
+												"{{order_invalid_id}}"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Users",
+			"item": [
+				{
+					"name": "Positive testing",
+					"item": [
+						{
+							"name": "Create user",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"const Ajv = require('ajv');\r",
+											"const ajv = new Ajv({ allErrors: true });\r",
+											"\r",
+											"const schemaUser = {\r",
+											"    \"type\": \"object\",\r",
+											"    \"properties\": {\r",
+											"        \"id\": {\r",
+											"            \"type\": \"integer\"\r",
+											"        },\r",
+											"        \"firstName\": {\r",
+											"            \"type\": \"string\"\r",
+											"        },\r",
+											"        \"lastName\": {\r",
+											"            \"type\": \"string\"\r",
+											"        },\r",
+											"        \"email\": {\r",
+											"            \"type\": \"string\"\r",
+											"        },\r",
+											"        \"dateOfBirth\": {\r",
+											"            \"type\": \"string\"\r",
+											"        },\r",
+											"        \"emailVerified\": {\r",
+											"            \"type\": \"boolean\"\r",
+											"        },\r",
+											"        \"signUpDate\": {\r",
+											"            \"type\": \"string\"\r",
+											"        },\r",
+											"        \"status\": {\r",
+											"            \"type\": \"string\"\r",
+											"        },\r",
+											"        \"level\": {\r",
+											"            \"type\": \"string\"\r",
+											"        }\r",
+											"    },\r",
+											"    \"required\": [\r",
+											"        \"id\",\r",
+											"        \"firstName\",\r",
+											"        \"lastName\",\r",
+											"        \"email\",\r",
+											"        \"dateOfBirth\",\r",
+											"        \"emailVerified\",\r",
+											"        \"signUpDate\",\r",
+											"        \"status\",\r",
+											"        \"level\"\r",
+											"    ]\r",
+											"}\r",
+											"\r",
+											"const validate = ajv.compile(schemaUser);\r",
+											"\r",
+											"const responseData = pm.response.json();\r",
+											"\r",
+											"const valid = validate(responseData);\r",
+											"\r",
+											"pm.test(\"Response time is less than 200ms\", function () {\r",
+											"    pm.expect(pm.response.responseTime).to.be.below(200);\r",
+											"});\r",
+											"pm.test(\"Status code is 201\", function () {\r",
+											"    pm.expect(pm.response).to.have.status(201);\r",
+											"});\r",
+											"pm.test(\"Content-Type is present\", function () {\r",
+											"    pm.expect(pm.response).to.have.header(\"Content-Type\");\r",
+											"});\r",
+											"pm.test(\"Schema is valid\", function () {\r",
+											"    if (!valid) {\r",
+											"        console.log('Schema validation errors:', validate.errors);\r",
+											"    }\r",
+											"    pm.expect(valid, \"Schema errors: \" + JSON.stringify(validate.errors, null, 2)).to.be.true;\r",
+											"});\r",
+											"\r",
+											"pm.collectionVariables.set(\"user_id\", responseData.id);"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"firstName\": \"Dream\",\r\n    \"lastName\": \"Real\",\r\n    \"email\": \"dream.real@gmail.com\",\r\n    \"dateOfBirth\": \"2001-10-99\",\r\n    \"emailVerified\": true,\r\n    \"signUpDate\": \"2019-08-24\",\r\n    \"status\": \"active\",\r\n    \"level\": \"lord\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/users",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"users"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "List users pagination",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"const Ajv = require('ajv');\r",
+											"const ajv = new Ajv({ allErrors: true });\r",
+											"\r",
+											"const schemaUsers = {\r",
+											"    \"type\": \"array\",\r",
+											"    \"items\":\r",
+											"    {\r",
+											"        \"type\": \"object\",\r",
+											"        \"properties\": {\r",
+											"            \"id\": {\r",
+											"                \"type\": \"integer\"\r",
+											"            },\r",
+											"            \"firstName\": {\r",
+											"                \"type\": \"string\"\r",
+											"            },\r",
+											"            \"lastName\": {\r",
+											"                \"type\": \"string\"\r",
+											"            },\r",
+											"            \"email\": {\r",
+											"                \"type\": \"string\"\r",
+											"            },\r",
+											"            \"dateOfBirth\": {\r",
+											"                \"type\": \"string\"\r",
+											"            },\r",
+											"            \"emailVerified\": {\r",
+											"                \"type\": \"boolean\"\r",
+											"            },\r",
+											"            \"signUpDate\": {\r",
+											"                \"type\": \"string\"\r",
+											"            },\r",
+											"            \"status\": {\r",
+											"                \"type\": \"string\"\r",
+											"            },\r",
+											"            \"level\": {\r",
+											"                \"type\": \"string\"\r",
+											"            }\r",
+											"        },\r",
+											"        \"required\": [\r",
+											"            \"id\",\r",
+											"            \"firstName\",\r",
+											"            \"lastName\",\r",
+											"            \"email\",\r",
+											"            \"dateOfBirth\",\r",
+											"            \"emailVerified\",\r",
+											"            \"signUpDate\",\r",
+											"            \"status\",\r",
+											"            \"level\"\r",
+											"        ]\r",
+											"    }\r",
+											"}\r",
+											"\r",
+											"const validate = ajv.compile(schemaUsers);\r",
+											"\r",
+											"const responseData = pm.response.json();\r",
+											"\r",
+											"const valid = validate(responseData);\r",
+											"\r",
+											"pm.test(\"Response time is less than 200ms\", function () {\r",
+											"    pm.expect(pm.response.responseTime).to.be.below(200);\r",
+											"});\r",
+											"pm.test(\"Status code is 200\", function () {\r",
+											"    pm.expect(pm.response).to.have.status(200);\r",
+											"});\r",
+											"pm.test(\"Content-Type is present\", function () {\r",
+											"    pm.expect(pm.response).to.have.header(\"Content-Type\");\r",
+											"});\r",
+											"pm.test(\"Schema is valid\", function (){\r",
+											"    if(!valid){\r",
+											"        console.log('Schema validation errors:', validate.errors);\r",
+											"    }\r",
+											"    pm.expect(valid, \"Schema errors: \" + JSON.stringify(validate.errors, null, 2)).to.be.true;\r",
+											"});\r",
+											"pm.test(\"Results limits by page size parameter as expected\", function() {\r",
+											"    const expectedPageSizeParam = pm.request.url.query.get('pageSize');\r",
+											"    pm.expect(responseData.length == expectedPageSizeParam || responseData.length < expectedPageSizeParam).to.be.true;\r",
+											"});\r",
+											"pm.test(\"Results fetches by page number parameter as expected\", function() {\r",
+											"    const pageParam = pm.request.url.query.get('page');\r",
+											"    const expectedPageParam = parseInt(pageParam, 10);\r",
+											"    \r",
+											"    const pageSizeParam = pm.request.url.query.get('pageSize');\r",
+											"    const expectedPageSizeParam = parseInt(pageSizeParam, 10)\r",
+											"\r",
+											"    const expectedStartIndex = (expectedPageParam - 1) * expectedPageSizeParam; \r",
+											"\r",
+											"    for (let i = 0; i < responseData.length; i++) {\r",
+											"        pm.expect(responseData[i].id).to.eql(expectedStartIndex + 1 + i);\r",
+											"    }\r",
+											"});\r",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/users?page=3&pageSize=3",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"users"
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "3"
+										},
+										{
+											"key": "pageSize",
+											"value": "3"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "List users sorting",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"const Ajv = require('ajv');\r",
+											"const ajv = new Ajv({ allErrors: true });\r",
+											"\r",
+											"const schemaUsers = {\r",
+											"    \"type\": \"array\",\r",
+											"    \"items\":\r",
+											"    {\r",
+											"        \"type\": \"object\",\r",
+											"        \"properties\": {\r",
+											"            \"id\": {\r",
+											"                \"type\": \"integer\"\r",
+											"            },\r",
+											"            \"firstName\": {\r",
+											"                \"type\": \"string\"\r",
+											"            },\r",
+											"            \"lastName\": {\r",
+											"                \"type\": \"string\"\r",
+											"            },\r",
+											"            \"email\": {\r",
+											"                \"type\": \"string\"\r",
+											"            },\r",
+											"            \"dateOfBirth\": {\r",
+											"                \"type\": \"string\"\r",
+											"            },\r",
+											"            \"emailVerified\": {\r",
+											"                \"type\": \"boolean\"\r",
+											"            },\r",
+											"            \"signUpDate\": {\r",
+											"                \"type\": \"string\"\r",
+											"            },\r",
+											"            \"status\": {\r",
+											"                \"type\": \"string\"\r",
+											"            },\r",
+											"            \"level\": {\r",
+											"                \"type\": \"string\"\r",
+											"            }\r",
+											"        },\r",
+											"        \"required\": [\r",
+											"            \"id\",\r",
+											"            \"firstName\",\r",
+											"            \"lastName\",\r",
+											"            \"email\",\r",
+											"            \"dateOfBirth\",\r",
+											"            \"emailVerified\",\r",
+											"            \"signUpDate\",\r",
+											"            \"status\",\r",
+											"            \"level\"\r",
+											"        ]\r",
+											"    }\r",
+											"}\r",
+											"\r",
+											"const validate = ajv.compile(schemaUsers);\r",
+											"\r",
+											"const responseData = pm.response.json();\r",
+											"\r",
+											"const valid = validate(responseData);\r",
+											"\r",
+											"pm.test(\"Response time is less than 200ms\", function () {\r",
+											"    pm.expect(pm.response.responseTime).to.be.below(200);\r",
+											"});\r",
+											"pm.test(\"Status code is 200\", function () {\r",
+											"    pm.expect(pm.response).to.have.status(200);\r",
+											"});\r",
+											"pm.test(\"Content-Type is present\", function () {\r",
+											"    pm.expect(pm.response).to.have.header(\"Content-Type\");\r",
+											"});\r",
+											"pm.test(\"Schema is valid\", function (){\r",
+											"    if(!valid){\r",
+											"        console.log('Schema validation errors:', validate.errors);\r",
+											"    }\r",
+											"    pm.expect(valid, \"Schema errors: \" + JSON.stringify(validate.errors, null, 2)).to.be.true;\r",
+											"});\r",
+											"pm.test(\"Results sort by sort order and sort key parameters as expected\", function() {\r",
+											"    const expectedSortOrderParam = pm.request.url.query.get('sortOrder');\r",
+											"    pm.expect(expectedSortOrderParam).to.be.oneOf(['ASC', 'DESC'])\r",
+											"\r",
+											"    const expectedSortKeyParam = pm.request.url.query.get('sortKey');\r",
+											"\r",
+											"    if(expectedSortOrderParam === 'ASC'){\r",
+											"        for(let i = 0; i++; i < responseData.length - 1){\r",
+											"            pm.expect(responseData[i][expectedSortKeyParam]).to.be.lessThan(responseData[i + 1][expectedSortKeyParam])\r",
+											"        }\r",
+											"    }\r",
+											"    if(expectedSortOrderParam === 'DESC'){\r",
+											"        for(let i = 0; i++; i < responseData.length - 1){\r",
+											"            pm.expect(responseData[i][expectedSortKeyParam]).to.be.greaterThan(responseData[i + 1][expectedSortKeyParam])\r",
+											"        }\r",
+											"    }\r",
+											"\r",
+											"});\r",
+											"\r",
+											"\r",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/users?sortOrder=ASC&sortKey=firstName",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"users"
+									],
+									"query": [
+										{
+											"key": "sortOrder",
+											"value": "ASC"
+										},
+										{
+											"key": "sortKey",
+											"value": "firstName"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "List users",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"const Ajv = require('ajv');\r",
+											"const ajv = new Ajv({ allErrors: true });\r",
+											"\r",
+											"const schemaUsers = {\r",
+											"    \"type\": \"array\",\r",
+											"    \"items\":\r",
+											"    {\r",
+											"        \"type\": \"object\",\r",
+											"        \"properties\": {\r",
+											"            \"id\": {\r",
+											"                \"type\": \"integer\"\r",
+											"            },\r",
+											"            \"firstName\": {\r",
+											"                \"type\": \"string\"\r",
+											"            },\r",
+											"            \"lastName\": {\r",
+											"                \"type\": \"string\"\r",
+											"            },\r",
+											"            \"email\": {\r",
+											"                \"type\": \"string\"\r",
+											"            },\r",
+											"            \"dateOfBirth\": {\r",
+											"                \"type\": \"string\"\r",
+											"            },\r",
+											"            \"emailVerified\": {\r",
+											"                \"type\": \"boolean\"\r",
+											"            },\r",
+											"            \"signUpDate\": {\r",
+											"                \"type\": \"string\"\r",
+											"            },\r",
+											"            \"status\": {\r",
+											"                \"type\": \"string\"\r",
+											"            },\r",
+											"            \"level\": {\r",
+											"                \"type\": \"string\"\r",
+											"            }\r",
+											"        },\r",
+											"        \"required\": [\r",
+											"            \"id\",\r",
+											"            \"firstName\",\r",
+											"            \"lastName\",\r",
+											"            \"email\",\r",
+											"            \"dateOfBirth\",\r",
+											"            \"emailVerified\",\r",
+											"            \"signUpDate\",\r",
+											"            \"status\",\r",
+											"            \"level\"\r",
+											"        ]\r",
+											"    }\r",
+											"}\r",
+											"\r",
+											"const validate = ajv.compile(schemaUsers);\r",
+											"\r",
+											"const responseData = pm.response.json();\r",
+											"\r",
+											"const valid = validate(responseData);\r",
+											"\r",
+											"pm.test(\"Response time is less than 200ms\", function () {\r",
+											"    pm.expect(pm.response.responseTime).to.be.below(200);\r",
+											"});\r",
+											"pm.test(\"Status code is 200\", function () {\r",
+											"    pm.expect(pm.response).to.have.status(200);\r",
+											"});\r",
+											"pm.test(\"Content-Type is present\", function () {\r",
+											"    pm.expect(pm.response).to.have.header(\"Content-Type\");\r",
+											"});\r",
+											"pm.test(\"Schema is valid\", function () {\r",
+											"    if (!valid) {\r",
+											"        console.log('Schema validation errors:', validate.errors);\r",
+											"    }\r",
+											"    pm.expect(valid, \"Schema errors: \" + JSON.stringify(validate.errors, null, 2)).to.be.true;\r",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/users",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"users"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get user by ID",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"const Ajv = require('ajv');\r",
+											"const ajv = new Ajv({ allErrors: true });\r",
+											"\r",
+											"const schemaUser = {\r",
+											"    \"type\": \"object\",\r",
+											"    \"properties\": {\r",
+											"        \"id\": {\r",
+											"            \"type\": \"integer\"\r",
+											"        },\r",
+											"        \"firstName\": {\r",
+											"            \"type\": \"string\"\r",
+											"        },\r",
+											"        \"lastName\": {\r",
+											"            \"type\": \"string\"\r",
+											"        },\r",
+											"        \"email\": {\r",
+											"            \"type\": \"string\"\r",
+											"        },\r",
+											"        \"dateOfBirth\": {\r",
+											"            \"type\": \"string\"\r",
+											"        },\r",
+											"        \"emailVerified\": {\r",
+											"            \"type\": \"boolean\"\r",
+											"        },\r",
+											"        \"signUpDate\": {\r",
+											"            \"type\": \"string\"\r",
+											"        },\r",
+											"        \"status\": {\r",
+											"            \"type\": \"string\"\r",
+											"        },\r",
+											"        \"level\": {\r",
+											"            \"type\": \"string\"\r",
+											"        }\r",
+											"    },\r",
+											"    \"required\": [\r",
+											"        \"id\",\r",
+											"        \"firstName\",\r",
+											"        \"lastName\",\r",
+											"        \"email\",\r",
+											"        \"dateOfBirth\",\r",
+											"        \"emailVerified\",\r",
+											"        \"signUpDate\",\r",
+											"        \"status\",\r",
+											"        \"level\"\r",
+											"    ]\r",
+											"}\r",
+											"\r",
+											"const validate = ajv.compile(schemaUser);\r",
+											"\r",
+											"const responseData = pm.response.json();\r",
+											"\r",
+											"const valid = validate(responseData);\r",
+											"\r",
+											"pm.test(\"Response time is less than 200ms\", function () {\r",
+											"    pm.expect(pm.response.responseTime).to.be.below(200);\r",
+											"});\r",
+											"pm.test(\"Status code is 200\", function () {\r",
+											"    pm.expect(pm.response).to.have.status(200);\r",
+											"});\r",
+											"pm.test(\"Content-Type is present\", function () {\r",
+											"    pm.expect(pm.response).to.have.header(\"Content-Type\");\r",
+											"});\r",
+											"pm.test(\"Schema is valid\", function () {\r",
+											"    if (!valid) {\r",
+											"        console.log('Schema validation errors:', validate.errors);\r",
+											"    }\r",
+											"    pm.expect(valid, \"Schema errors: \" + JSON.stringify(validate.errors, null, 2)).to.be.true;\r",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/users/{{user_id}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"users",
+										"{{user_id}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Update user",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"const Ajv = require('ajv');\r",
+											"const ajv = new Ajv({ allErrors: true });\r",
+											"\r",
+											"const schemaUser = {\r",
+											"    \"type\": \"object\",\r",
+											"    \"properties\": {\r",
+											"        \"id\": {\r",
+											"            \"type\": \"integer\"\r",
+											"        },\r",
+											"        \"firstName\": {\r",
+											"            \"type\": \"string\"\r",
+											"        },\r",
+											"        \"lastName\": {\r",
+											"            \"type\": \"string\"\r",
+											"        },\r",
+											"        \"email\": {\r",
+											"            \"type\": \"string\"\r",
+											"        },\r",
+											"        \"dateOfBirth\": {\r",
+											"            \"type\": \"string\"\r",
+											"        },\r",
+											"        \"emailVerified\": {\r",
+											"            \"type\": \"boolean\"\r",
+											"        },\r",
+											"        \"signUpDate\": {\r",
+											"            \"type\": \"string\"\r",
+											"        },\r",
+											"        \"status\": {\r",
+											"            \"type\": \"string\"\r",
+											"        },\r",
+											"        \"level\": {\r",
+											"            \"type\": \"string\"\r",
+											"        }\r",
+											"    },\r",
+											"    \"required\": [\r",
+											"        \"id\",\r",
+											"        \"firstName\",\r",
+											"        \"lastName\",\r",
+											"        \"email\",\r",
+											"        \"dateOfBirth\",\r",
+											"        \"emailVerified\",\r",
+											"        \"signUpDate\",\r",
+											"        \"status\",\r",
+											"        \"level\"\r",
+											"    ]\r",
+											"}\r",
+											"\r",
+											"const validate = ajv.compile(schemaUser);\r",
+											"\r",
+											"const responseData = pm.response.json();\r",
+											"\r",
+											"const valid = validate(responseData);\r",
+											"\r",
+											"pm.test(\"Response time is less than 200ms\", function () {\r",
+											"    pm.expect(pm.response.responseTime).to.be.below(200);\r",
+											"});\r",
+											"pm.test(\"Status code is 200\", function () {\r",
+											"    pm.expect(pm.response).to.have.status(200);\r",
+											"});\r",
+											"pm.test(\"Content-Type is present\", function () {\r",
+											"    pm.expect(pm.response).to.have.header(\"Content-Type\");\r",
+											"});\r",
+											"pm.test(\"Schema is valid\", function () {\r",
+											"    if (!valid) {\r",
+											"        console.log('Schema validation errors:', validate.errors);\r",
+											"    }\r",
+											"    pm.expect(valid, \"Schema errors: \" + JSON.stringify(validate.errors, null, 2)).to.be.true;\r",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"firstName\": \"Ilon\",\r\n    \"lastName\": \"Mask\",\r\n    \"email\": \"ilon.mask@gmail.com\",\r\n    \"dateOfBirth\": \"2001-10-99\",\r\n    \"emailVerified\": true,\r\n    \"signUpDate\": \"2019-08-24\",\r\n    \"status\": \"active\",\r\n    \"level\": \"lord\",\r\n    \"id\": {{user_id}}\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/users",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"users"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Remove user by ID",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"const Ajv = require('ajv');\r",
+											"const ajv = new Ajv({ allErrors: true });\r",
+											"\r",
+											"const schemaUser = {\r",
+											"    \"type\": \"object\",\r",
+											"    \"properties\": {\r",
+											"        \"id\": {\r",
+											"            \"type\": \"integer\"\r",
+											"        },\r",
+											"        \"firstName\": {\r",
+											"            \"type\": \"string\"\r",
+											"        },\r",
+											"        \"lastName\": {\r",
+											"            \"type\": \"string\"\r",
+											"        },\r",
+											"        \"email\": {\r",
+											"            \"type\": \"string\"\r",
+											"        },\r",
+											"        \"dateOfBirth\": {\r",
+											"            \"type\": \"string\"\r",
+											"        },\r",
+											"        \"emailVerified\": {\r",
+											"            \"type\": \"boolean\"\r",
+											"        },\r",
+											"        \"signUpDate\": {\r",
+											"            \"type\": \"string\"\r",
+											"        },\r",
+											"        \"status\": {\r",
+											"            \"type\": \"string\"\r",
+											"        },\r",
+											"        \"level\": {\r",
+											"            \"type\": \"string\"\r",
+											"        }\r",
+											"    },\r",
+											"    \"required\": [\r",
+											"        \"id\",\r",
+											"        \"firstName\",\r",
+											"        \"lastName\",\r",
+											"        \"email\",\r",
+											"        \"dateOfBirth\",\r",
+											"        \"emailVerified\",\r",
+											"        \"signUpDate\",\r",
+											"        \"status\",\r",
+											"        \"level\"\r",
+											"    ]\r",
+											"}\r",
+											"\r",
+											"const validate = ajv.compile(schemaUser);\r",
+											"\r",
+											"const responseData = pm.response.json();\r",
+											"\r",
+											"const valid = validate(responseData);\r",
+											"\r",
+											"pm.test(\"Response time is less than 200ms\", function () {\r",
+											"    pm.expect(pm.response.responseTime).to.be.below(200);\r",
+											"});\r",
+											"pm.test(\"Status code is 200\", function () {\r",
+											"    pm.expect(pm.response).to.have.status(200);\r",
+											"});\r",
+											"pm.test(\"Content-Type is present\", function () {\r",
+											"    pm.expect(pm.response).to.have.header(\"Content-Type\");\r",
+											"});\r",
+											"pm.test(\"Schema is valid\", function () {\r",
+											"    if (!valid) {\r",
+											"        console.log('Schema validation errors:', validate.errors);\r",
+											"    }\r",
+											"    pm.expect(valid, \"Schema errors: \" + JSON.stringify(validate.errors, null, 2)).to.be.true;\r",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/users/{{user_id}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"users",
+										"{{user_id}}"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Negative testing [Bug found]",
+					"item": [
+						{
+							"name": "Create user with invalid body [Bug found]",
+							"item": [
+								{
+									"name": "Create user without email",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Response time is less than 200ms\", function () {\r",
+													"    pm.expect(pm.response.responseTime).to.be.below(200);\r",
+													"});\r",
+													"pm.test(\"Status code is 400\", function () {\r",
+													"    pm.expect(pm.response).to.have.status(400);\r",
+													"});\r",
+													"pm.test(\"Content-Type is present\", function () {\r",
+													"    pm.expect(pm.response).to.have.header(\"Content-Type\");\r",
+													"});\r",
+													"pm.test(\"Response body is empty\", function (){\r",
+													"    pm.expect(pm.response.text()).to.be.empty;\r",
+													"})"
+												],
+												"type": "text/javascript",
+												"packages": {}
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n    \"firstName\": \"Dream\",\r\n    \"lastName\": \"Real\",\r\n    \"dateOfBirth\": \"2001-10-99\",\r\n    \"emailVerified\": true,\r\n    \"signUpDate\": \"2019-08-24\",\r\n    \"status\": \"active\",\r\n    \"level\": \"lord\"\r\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{baseUrl}}/users",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"users"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "List users",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"const Ajv = require('ajv');\r",
+													"const ajv = new Ajv({ allErrors: true });\r",
+													"\r",
+													"const schemaUsers = {\r",
+													"    \"type\": \"array\",\r",
+													"    \"items\":\r",
+													"    {\r",
+													"        \"type\": \"object\",\r",
+													"        \"properties\": {\r",
+													"            \"id\": {\r",
+													"                \"type\": \"integer\"\r",
+													"            },\r",
+													"            \"firstName\": {\r",
+													"                \"type\": \"string\"\r",
+													"            },\r",
+													"            \"lastName\": {\r",
+													"                \"type\": \"string\"\r",
+													"            },\r",
+													"            \"email\": {\r",
+													"                \"type\": \"string\"\r",
+													"            },\r",
+													"            \"dateOfBirth\": {\r",
+													"                \"type\": \"string\"\r",
+													"            },\r",
+													"            \"emailVerified\": {\r",
+													"                \"type\": \"boolean\"\r",
+													"            },\r",
+													"            \"signUpDate\": {\r",
+													"                \"type\": \"string\"\r",
+													"            },\r",
+													"            \"status\": {\r",
+													"                \"type\": \"string\"\r",
+													"            },\r",
+													"            \"level\": {\r",
+													"                \"type\": \"string\"\r",
+													"            }\r",
+													"        },\r",
+													"        \"required\": [\r",
+													"            \"id\",\r",
+													"            \"firstName\",\r",
+													"            \"lastName\",\r",
+													"            \"email\",\r",
+													"            \"dateOfBirth\",\r",
+													"            \"emailVerified\",\r",
+													"            \"signUpDate\",\r",
+													"            \"status\",\r",
+													"            \"level\"\r",
+													"        ]\r",
+													"    }\r",
+													"}\r",
+													"\r",
+													"const validate = ajv.compile(schemaUsers);\r",
+													"\r",
+													"const responseData = pm.response.json();\r",
+													"\r",
+													"const valid = validate(responseData);\r",
+													"\r",
+													"pm.test(\"Response time is less than 200ms\", function () {\r",
+													"    pm.expect(pm.response.responseTime).to.be.below(200);\r",
+													"});\r",
+													"pm.test(\"Status code is 200\", function () {\r",
+													"    pm.expect(pm.response).to.have.status(200);\r",
+													"});\r",
+													"pm.test(\"Content-Type is present\", function () {\r",
+													"    pm.expect(pm.response).to.have.header(\"Content-Type\");\r",
+													"});\r",
+													"pm.test(\"Schema is valid\", function () {\r",
+													"    if (!valid) {\r",
+													"        console.log('Schema validation errors:', validate.errors);\r",
+													"        //save ID to delete invalid user\r",
+													"        validate.errors.forEach(error => {\r",
+													"            const indexMatch = error.dataPath.match(/\\d+/);\r",
+													"            if (indexMatch) {\r",
+													"                const index = parseInt(indexMatch[0], 10);\r",
+													"                const invalidObject = responseData[index];\r",
+													"                \r",
+													"                if (invalidObject && invalidObject.id !== undefined) {\r",
+													"                    pm.collectionVariables.set(\"user_invalid_object_id\", invalidObject.id);\r",
+													"                }\r",
+													"            }\r",
+													"        });\r",
+													"    }\r",
+													"    pm.expect(valid, \"Schema errors: \" + JSON.stringify(validate.errors, null, 2)).to.be.true;\r",
+													"});"
+												],
+												"type": "text/javascript",
+												"packages": {}
+											}
+										}
+									],
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{baseUrl}}/users",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"users"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Remove user without email",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"const Ajv = require('ajv');\r",
+													"const ajv = new Ajv({ allErrors: true });\r",
+													"\r",
+													"const schemaUserWithoutEmail = {\r",
+													"    \"type\": \"object\",\r",
+													"    \"properties\": {\r",
+													"        \"id\": {\r",
+													"            \"type\": \"integer\"\r",
+													"        },\r",
+													"        \"firstName\": {\r",
+													"            \"type\": \"string\"\r",
+													"        },\r",
+													"        \"lastName\": {\r",
+													"            \"type\": \"string\"\r",
+													"        },\r",
+													"        \"dateOfBirth\": {\r",
+													"            \"type\": \"string\"\r",
+													"        },\r",
+													"        \"emailVerified\": {\r",
+													"            \"type\": \"boolean\"\r",
+													"        },\r",
+													"        \"signUpDate\": {\r",
+													"            \"type\": \"string\"\r",
+													"        },\r",
+													"        \"status\": {\r",
+													"            \"type\": \"string\"\r",
+													"        },\r",
+													"        \"level\": {\r",
+													"            \"type\": \"string\"\r",
+													"        }\r",
+													"    },\r",
+													"    \"required\": [\r",
+													"        \"id\",\r",
+													"        \"firstName\",\r",
+													"        \"lastName\",\r",
+													"        \"dateOfBirth\",\r",
+													"        \"emailVerified\",\r",
+													"        \"signUpDate\",\r",
+													"        \"status\",\r",
+													"        \"level\"\r",
+													"    ]\r",
+													"}\r",
+													"\r",
+													"const validate = ajv.compile(schemaUserWithoutEmail);\r",
+													"\r",
+													"const responseData = pm.response.json();\r",
+													"\r",
+													"const valid = validate(responseData);\r",
+													"\r",
+													"pm.test(\"Response time is less than 200ms\", function () {\r",
+													"    pm.expect(pm.response.responseTime).to.be.below(200);\r",
+													"});\r",
+													"pm.test(\"Status code is 200\", function () {\r",
+													"    pm.expect(pm.response).to.have.status(200);\r",
+													"});\r",
+													"pm.test(\"Content-Type is present\", function () {\r",
+													"    pm.expect(pm.response).to.have.header(\"Content-Type\");\r",
+													"});\r",
+													"pm.test(\"Schema is valid\", function () {\r",
+													"    if (!valid) {\r",
+													"        console.log('Schema validation errors:', validate.errors);\r",
+													"    }\r",
+													"    pm.expect(valid, \"Schema errors: \" + JSON.stringify(validate.errors, null, 2)).to.be.true;\r",
+													"});"
+												],
+												"type": "text/javascript",
+												"packages": {}
+											}
+										}
+									],
+									"request": {
+										"method": "DELETE",
+										"header": [],
+										"url": {
+											"raw": "{{baseUrl}}/users/{{user_invalid_object_id}}",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"users",
+												"{{user_invalid_object_id}}"
+											]
+										}
+									},
+									"response": []
+								}
+							],
+							"description": "This folder contains a test for creating a user with an invalid body (missing email field).\n\nThe POST request \"Create user without email\" has a 400 status code and an empty response body. According to this, the object should not be created without some fields missing.  \nBut the next GET request \"List users\" in this folder, checks the response body for schema compliance, and this assertion fails because the object with an invalid body was actually created. In the if block of the schema validation test, the ID of the invalid object is extracted from the response and stored as a collection variable.  \nThe next DELETE request \"Delete user without email\" deletes the invalid object by the ID of the collection variable, so as not to leave invalid data in the DB, and this invalid data will also not affect the results of other tests; no matter how many times we need to run the tests."
+						},
+						{
+							"name": "Search by invalid ID",
+							"item": [
+								{
+									"name": "Get user by invalid ID",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"const Ajv = require('ajv');\r",
+													"const ajv = new Ajv({ allErrors: true });\r",
+													"\r",
+													"const schemaUserWithInvalidId = {\r",
+													"  \"type\": \"object\",\r",
+													"}\r",
+													"\r",
+													"const validate = ajv.compile(schemaUserWithInvalidId);\r",
+													"\r",
+													"const responseData = pm.response.json();\r",
+													"\r",
+													"const valid = validate(responseData);\r",
+													"\r",
+													"pm.test(\"Response time is less than 200ms\", function () {\r",
+													"    pm.expect(pm.response.responseTime).to.be.below(200);\r",
+													"});\r",
+													"pm.test(\"Status code is 404\", function () {\r",
+													"    pm.expect(pm.response).to.have.status(404);\r",
+													"});\r",
+													"pm.test(\"Content-Type is present\", function () {\r",
+													"    pm.expect(pm.response).to.have.header(\"Content-Type\");\r",
+													"});\r",
+													"pm.test(\"Schema is valid\", function (){\r",
+													"    if(!valid){\r",
+													"        console.log('Schema validation errors:', validate.errors);\r",
+													"    }\r",
+													"    pm.expect(valid, \"Schema errors: \" + JSON.stringify(validate.errors, null, 2)).to.be.true;\r",
+													"});"
+												],
+												"type": "text/javascript",
+												"packages": {}
+											}
+										}
+									],
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{baseUrl}}/users/{{user_invalid_id}}",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"users",
+												"{{user_invalid_id}}"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Update user with invalid ID",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Response time is less than 200ms\", function () {\r",
+													"    pm.expect(pm.response.responseTime).to.be.below(200);\r",
+													"});\r",
+													"pm.test(\"Status code is 404\", function () {\r",
+													"    pm.expect(pm.response).to.have.status(404);\r",
+													"});\r",
+													"pm.test(\"Content-Type is present\", function () {\r",
+													"    pm.expect(pm.response).to.have.header(\"Content-Type\");\r",
+													"});\r",
+													"pm.test(\"Response body is a string that contains text and an invalid ID as expected\", function (){\r",
+													"    pm.expect(pm.response.text()).to.be.a('string').and.not.empty;\r",
+													"    pm.expect(pm.response.text()).to.include(\"Item not found with ID\").and.include(pm.collectionVariables.get(\"user_invalid_id\"));\r",
+													"})"
+												],
+												"type": "text/javascript",
+												"packages": {}
+											}
+										}
+									],
+									"request": {
+										"method": "PUT",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n    \"firstName\": \"Ilon\",\r\n    \"lastName\": \"Mask\",\r\n    \"email\": \"ilon.mask@gmail.com\",\r\n    \"dateOfBirth\": \"2001-10-99\",\r\n    \"emailVerified\": true,\r\n    \"signUpDate\": \"2019-08-24\",\r\n    \"status\": \"active\",\r\n    \"level\": \"lord\",\r\n    \"id\": {{user_invalid_id}}\r\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{baseUrl}}/users",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"users"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Remove user by invalid ID",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Response time is less than 200ms\", function () {\r",
+													"    pm.expect(pm.response.responseTime).to.be.below(200);\r",
+													"});\r",
+													"pm.test(\"Status code is 200\", function () {\r",
+													"    pm.expect(pm.response).to.have.status(200);\r",
+													"});\r",
+													"pm.test(\"Content-Type is present\", function () {\r",
+													"    pm.expect(pm.response).to.have.header(\"Content-Type\");\r",
+													"});\r",
+													"pm.test(\"Response body is empty\", function (){\r",
+													"    pm.expect(pm.response.text()).to.be.empty;\r",
+													"})"
+												],
+												"type": "text/javascript",
+												"packages": {}
+											}
+										}
+									],
+									"request": {
+										"method": "DELETE",
+										"header": [],
+										"url": {
+											"raw": "{{baseUrl}}/users/{{user_invalid_id}}",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"users",
+												"{{user_invalid_id}}"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						}
+					]
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:3000",
+			"type": "string"
+		},
+		{
+			"key": "product_id",
+			"value": ""
+		},
+		{
+			"key": "product_invalid_object_id",
+			"value": ""
+		},
+		{
+			"key": "product_invalid_id",
+			"value": "404",
+			"type": "string"
+		},
+		{
+			"key": "order_id",
+			"value": ""
+		},
+		{
+			"key": "order_invalid_object_id",
+			"value": ""
+		},
+		{
+			"key": "order_invalid_id",
+			"value": "404",
+			"type": "string"
+		},
+		{
+			"key": "user_id",
+			"value": ""
+		},
+		{
+			"key": "user_invalid_object_id",
+			"value": ""
+		},
+		{
+			"key": "user_invalid_id",
+			"value": "404",
+			"type": "string"
+		}
+	]
+}
