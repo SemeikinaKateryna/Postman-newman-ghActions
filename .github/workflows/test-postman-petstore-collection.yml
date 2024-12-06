@@ -1,4 +1,3 @@
-name: Test-Build
 on:
   push:
     branches:
@@ -8,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      
+
       - name: Install Node
         uses: actions/setup-node@v3
         with:
@@ -36,10 +35,19 @@ jobs:
           name: RunReports
           path: testResults 
 
+      - name: Download the artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: RunReports
+
+      - name: Copy the HTML report to the root
+        run: |
+          cp testResults/htmlreport.html ./htmlreport.html
+
       - name: Publish test report
         uses: peaceiris/actions-gh-pages@v3
         if: always()
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
-          publish_dir: testResults
+          publish_dir: ./
